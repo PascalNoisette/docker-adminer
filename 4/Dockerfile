@@ -1,4 +1,4 @@
-FROM php:7.3-alpine
+FROM php:7.3-buster
 
 RUN	echo "upload_max_filesize = 128M" >> /usr/local/etc/php/conf.d/0-upload_large_dumps.ini \
 &&	echo "post_max_size = 128M" >> /usr/local/etc/php/conf.d/0-upload_large_dumps.ini \
@@ -8,22 +8,24 @@ RUN	echo "upload_max_filesize = 128M" >> /usr/local/etc/php/conf.d/0-upload_larg
 
 STOPSIGNAL SIGINT
 
-RUN	addgroup -S adminer \
-&&	adduser -S -G adminer adminer \
+RUN	groupadd adminer \
+&&	useradd -g adminer adminer \
 &&	mkdir -p /var/www/html \
 &&	mkdir -p /var/www/html/plugins-enabled \
 &&	chown -R adminer:adminer /var/www/html
 
 WORKDIR /var/www/html
 
-RUN	apk add --no-cache libpq
-
-RUN	set -x \
-&&	apk add --no-cache --virtual .build-deps \
-	postgresql-dev \
-	sqlite-dev \
-&&	docker-php-ext-install pdo_mysql pdo_pgsql pdo_sqlite \
-&&	apk del .build-deps
+RUN	apt-get update \
+&&  apt-get install -y \
+    libpq5 \
+    libpq-dev \
+    libsqlite3-dev \
+    firebird-dev \
+&&	docker-php-ext-install \
+    pdo_mysql \
+    pdo_pgsql \
+    pdo_sqlite interbase
 
 COPY	*.php /var/www/html/
 
